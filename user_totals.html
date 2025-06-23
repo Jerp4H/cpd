@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User CPD Totals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">User CPD Totals</h1>
+    <a href="index.html" class="inline-block mb-4 text-blue-600 underline">Back to Calculator</a>
+    <div id="userTotals" class="space-y-3"></div>
+  </div>
+
+  <script>
+    const totalsDiv = document.getElementById('userTotals');
+    const data = JSON.parse(localStorage.getItem('cpdEntries') || '[]');
+
+    const users = {};
+    data.forEach(entry => {
+      const numeronsiirrotProducts = entry.numeronsiirrot * 0.55;
+      const hbbProducts = entry.hbb * 0.9;
+      const productAmount = numeronsiirrotProducts + hbbProducts;
+
+      if (!users[entry.name]) {
+        users[entry.name] = { totalCost: 0, totalProducts: 0 };
+      }
+      users[entry.name].totalCost += entry.cost;
+      users[entry.name].totalProducts += productAmount;
+    });
+
+    Object.entries(users).forEach(([name, stats]) => {
+      const overallCPD = stats.totalCost / stats.totalProducts;
+      const el = document.createElement('div');
+      el.className = 'p-3 bg-gray-50 border rounded';
+      el.innerHTML = `
+        <strong>${name}</strong><br />
+        Total Cost: €${stats.totalCost.toFixed(2)}<br />
+        Total Products: ${stats.totalProducts.toFixed(2)}<br />
+        Overall CPD: €${overallCPD.toFixed(2)}
+      `;
+      totalsDiv.appendChild(el);
+    });
+  </script>
+</body>
+</html>
