@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Totals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-6">User & Venue Totals</h1>
+    <a href="index.html" class="text-blue-500 underline mb-4 inline-block">Back to Calculator</a>
+
+    <div id="userTotals" class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">User Totals</h2>
+      <div id="userResults" class="space-y-2"></div>
+    </div>
+
+    <div id="venueTotals">
+      <h2 class="text-xl font-semibold mb-2">Venue Totals</h2>
+      <div id="venueResults" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('cpdEntries') || '[]');
+
+    const aggregateBy = (key) => {
+      const map = {};
+      data.forEach(entry => {
+        const id = entry[key];
+        if (!map[id]) {
+          map[id] = { numeronsiirrot: 0, hbb: 0, cost: 0 };
+        }
+        map[id].numeronsiirrot += entry.numeronsiirrot;
+        map[id].hbb += entry.hbb;
+        map[id].cost += entry.cost;
+      });
+      return map;
+    };
+
+    const renderTotals = (map, container) => {
+      Object.entries(map).forEach(([key, val]) => {
+        const totalProducts = (val.numeronsiirrot * 0.55) + (val.hbb * 0.9);
+        const cpd = val.cost / totalProducts;
+        const el = document.createElement('div');
+        el.className = 'p-3 bg-gray-50 border rounded';
+        el.innerHTML = `
+          <strong>${key}</strong><br />
+          Total Cost: €${val.cost.toFixed(2)}<br />
+          Total Numeronsiirrot: ${val.numeronsiirrot}<br />
+          Total HBB/Play: ${val.hbb}<br />
+          Overall CPD: €${cpd.toFixed(2)}
+        `;
+        container.appendChild(el);
+      });
+    };
+
+    const userContainer = document.getElementById('userResults');
+    const venueContainer = document.getElementById('venueResults');
+
+    const userMap = aggregateBy('name');
+    const venueMap = aggregateBy('venue');
+
+    renderTotals(userMap, userContainer);
+    renderTotals(venueMap, venueContainer);
+  </script>
+</body>
+</html>

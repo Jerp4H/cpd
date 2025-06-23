@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPD Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">CPD Calculator</h1>
+    <form id="cpdForm" class="space-y-4">
+      <input type="text" id="name" placeholder="Name" class="w-full p-2 border rounded" required />
+      <input type="text" id="venue" placeholder="Venue" class="w-full p-2 border rounded" required />
+      <input type="number" id="numeronsiirrot" placeholder="Numeronsiirrot" class="w-full p-2 border rounded" required />
+      <input type="number" id="hbb" placeholder="HBB/Play" class="w-full p-2 border rounded" required />
+      <input type="number" id="cost" placeholder="Total Cost (€)" step="0.01" class="w-full p-2 border rounded" required />
+      <div class="flex gap-4">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate CPD</button>
+        <button type="button" id="clearBtn" class="bg-red-500 text-white px-4 py-2 rounded">Clear All Data</button>
+        <a href="user_totals.html" class="bg-green-500 text-white px-4 py-2 rounded">View User Totals</a>
+      </div>
+    </form>
+
+    <div id="results" class="mt-6">
+      <h2 class="text-xl font-semibold mb-2">Results</h2>
+      <div id="entries" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('cpdForm');
+    const entriesDiv = document.getElementById('entries');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const loadEntries = () => {
+      const data = JSON.parse(localStorage.getItem('cpdEntries') || '[]');
+      entriesDiv.innerHTML = '';
+
+      data.forEach(entry => {
+        const numeronsiirrotProducts = entry.numeronsiirrot * 0.55;
+        const hbbProducts = entry.hbb * 0.9;
+        const productAmount = numeronsiirrotProducts + hbbProducts;
+        const cpd = entry.cost / productAmount;
+
+        const entryEl = document.createElement('div');
+        entryEl.className = 'p-3 bg-gray-50 border rounded';
+        entryEl.innerHTML = `
+          <strong>${entry.name}</strong> at <strong>${entry.venue}</strong><br />
+          CPD: €${cpd.toFixed(2)}<br />
+          Cost: €${entry.cost.toFixed(2)}<br />
+          Products: ${productAmount.toFixed(2)}<br />
+          - Numeronsiirrot Products: ${numeronsiirrotProducts.toFixed(2)} (${entry.numeronsiirrot})<br />
+          - HBB/Play Products: ${hbbProducts.toFixed(2)} (${entry.hbb})
+        `;
+        entriesDiv.appendChild(entryEl);
+      });
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const entry = {
+        name: document.getElementById('name').value.trim(),
+        venue: document.getElementById('venue').value.trim(),
+        numeronsiirrot: parseFloat(document.getElementById('numeronsiirrot').value),
+        hbb: parseFloat(document.getElementById('hbb').value),
+        cost: parseFloat(document.getElementById('cost').value)
+      };
+
+      const data = JSON.parse(localStorage.getItem('cpdEntries') || '[]');
+      data.push(entry);
+      localStorage.setItem('cpdEntries', JSON.stringify(data));
+
+      form.reset();
+      loadEntries();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all stored data?')) {
+        localStorage.removeItem('cpdEntries');
+        loadEntries();
+      }
+    });
+
+    loadEntries();
+  </script>
+</body>
+</html>
