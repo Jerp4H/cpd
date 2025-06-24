@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Totals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-6">User & Venue Totals</h1>
+    <a href="index.html" class="text-blue-500 underline mb-4 inline-block">Back to Calculator</a>
+
+    <div id="userTotals" class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">User Totals</h2>
+      <div id="userResults" class="space-y-2"></div>
+    </div>
+
+    <div id="venueTotals" class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Venue Totals</h2>
+      <div id="venueResults" class="space-y-2"></div>
+    </div>
+
+    <div id="rankings">
+      <h2 class="text-xl font-semibold mb-2">Top CPD Rankings</h2>
+      <div id="rankingResults" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('cpdEntries') || '[]');
+
+    const aggregateBy = (key) => {
+      const map = {};
+      data.forEach(entry => {
+        const id = entry[key];
+        if (!map[id]) {
+          map[id] = { numeronsiirrot: 0, hbb: 0, cost: 0 };
+        }
+        map[id].numeronsiirrot += entry.numeronsiirrot;
+        map[id].hbb += entry.hbb;
+        map[id].cost += entry.cost;
+      });
+      return map;
+    };
+
+    const getCpdClass = (cpd) => {
+      return cpd < 140 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
+    };
+
+    const renderTotals = (map, container) => {
+      Object.entries(map).forEach(([key, val]) => {
+        const totalProducts = (val.numeronsiirrot * 0.55) + (val.hbb * 0.9);
+        const cpd = val.cost / totalProducts;
+        const el = document.createElement('div');
+        el.className = 'p-3 bg-gray-50 border rounded';
+        el.innerHTML = `
+          <strong>${key}</strong><br />
+          Total Cost: €${val.cost.toFixed(2)}<br />
+          Total Numeronsiirrot: ${val.numeronsiirrot}<br />
+          Total HBB/Play: ${val.hbb}<br />
+          Overall CPD: <span class="${getCpdClass(cpd)}">€${cpd.toFixed(2)}</span>
+        `;
+        container.appendChild(el);
+      });
+    };
+
+    const renderRankings = (map, container) => {
+      const sorted = Object.entries(map).map(([key, val]) => {
+        const totalProducts = (val.numeronsiirrot * 0.55) + (val.hbb * 0.9);
+        const cpd = val.cost / totalProducts;
+        return { key, cpd };
+      }).sort((a, b) => a.cpd - b.cpd);
+
+      sorted.forEach((item, index) => {
+        const el = document.createElement('div');
+        el.className = 'p-2 border rounded bg-yellow-50';
+        el.innerHTML = `#${index + 1}: <strong>${item.key}</strong> - CPD: <span class="${getCpdClass(item.cpd)}">€${item.cpd.toFixed(2)}</span>`;
+        container.appendChild(el);
+      });
+    };
+
+    const userContainer = document.getElementById('userResults');
+    const venueContainer = document.getElementById('venueResults');
+    const rankingContainer = document.getElementById('rankingResults');
+
+    const userMap = aggregateBy('name');
+    const venueMap = aggregateBy('venue');
+
+    renderTotals(userMap, userContainer);
+    renderTotals(venueMap, venueContainer);
+
+    rankingContainer.innerHTML += '<h3 class="font-semibold">Users</h3>';
+    renderRankings(userMap, rankingContainer);
+    rankingContainer.innerHTML += '<h3 class="font-semibold mt-4">Venues</h3>';
+    renderRankings(venueMap, rankingContainer);
+  </script>
+</body>
+</html>
